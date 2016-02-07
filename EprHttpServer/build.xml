@@ -1,0 +1,160 @@
+<!--
+//***************************************************************
+// * (C) Copyrights 2014, Produvia. All rights reserved.
+// * PRODUVIA CONFIDENTIAL PROPRIETRY
+// * Contains confidential and proprietary information of Produvia.
+// * Reverse engineering is prohibited.
+// * The copyright notice does not imply publication.
+// ***************************************************************/
+-->
+<project name="WeaverHttpServer" default="dist" basedir=".">
+  <description> Ant build file for the WeaverHttpServer project </description>
+
+
+
+
+<!-- set global properties for this build -->
+  <property name="ant.project.name" value="WeaverHttpServer"/>
+  <property name="ant.project.version"  value="1.0.0"/>
+  <property name="main_class_name" value="com.produvia.eprHttp.mainHttp"/>
+  <property name="main_class_local_name" value="com.produvia.eprHttp.mainHttp"/>
+  <property name="jarname"  value="${ant.project.name}"/>
+
+<!-- set directories -->
+  <property name="src" location="src"/>
+  <property name="test" location="test"/>
+  <property name="build" location="build"/>
+  <property name="dist"  location="dist"/>
+  <property name="libs"  location="libs"/>
+ 
+  <path id="project.classpath">
+    <pathelement location="${build}" />
+    <fileset dir="${libs}" includes="**/*.jar" />
+  </path>
+ 
+  
+
+ 
+  <target name="init">
+<!-- Create the time stamp -->
+    <tstamp/>
+<!-- Create directories if needed -->
+    <mkdir dir="${src}"/>
+    <mkdir dir="${test}"/>
+    <mkdir dir="${build}"/>
+    <mkdir dir="${dist}"/>
+  </target>
+ 
+  <target name="compile" depends="init" description="compile the source " >
+<!-- Compile the java code from ${src} into ${build} -->
+
+    <javac debug="true"
+      includeantruntime="false"
+      target="1.7"
+      srcdir="${src}"
+      destdir="${build}"
+      classpathref="project.classpath"/>
+<!-- Copy files from ${src} into ${build} -->
+    <copy todir="${build}">
+      <fileset dir="${src}">
+        <exclude name="**/*.java"/>
+      </fileset>
+    </copy>
+  </target>
+ 
+  <target name="test" depends="compiletest" description="run the tests " >
+    <junit printsummary="yes" fork="yes" haltonfailure="yes">
+      <formatter type="plain"/>
+      <batchtest fork="true">
+        <fileset dir="${test}">
+          <include name="**/*Test*.java"/>
+        </fileset>
+      </batchtest>
+      <classpath refid="${project.classpath}" />
+    </junit>
+  </target>
+ 
+  <target name="compiletest" depends="compile" description="compile the tests " >
+    <javac debug="true" srcdir="${test}" 
+        target="1.7"
+        destdir="${build}"
+        classpathref="project.classpath" />
+  </target>
+ 
+  <target name="dist" depends="compile" description="generate the distribution" >
+<!-- Create the distribution directory -->
+ 
+<!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
+    <jar jarfile="${dist}/${jarname}-${DSTAMP}.jar" basedir="${build}">
+      <manifest>
+        <attribute name="Main-Class" value="${main_class_name}"/>
+        <attribute name="Manifest-Version" value="${ant.project.version}"/>
+        <attribute name="Permission" value="all-permissions"/>
+      </manifest>
+      <zipgroupfileset dir="${libs}" includes="*.jar"/>
+    </jar>
+    <copy file="${dist}/${jarname}-${DSTAMP}.jar" tofile="./${jarname}.jar" overwrite="true"/>
+  </target>
+ 
+  <target name="clean" description="clean up" >
+<!-- Delete the ${build} directory-->
+    <delete dir="${build}"/>
+  </target>
+
+  <!--proguard -->
+  <taskdef resource="proguard/ant/task.properties"
+         classpath="../proguard5.2.1/libs/proguard.jar" />
+  <!-- ANT OBFUSCATE TASK --> 
+  <target name="release" depends="dist">
+    <proguard
+      allowaccessmodification="true"
+      usemixedcaseclassnames="false"
+      defaultpackage=""
+      skipnonpubliclibraryclasses="false"
+      printseeds="obfuscateseeds.txt"
+      printusage="obfuscateusage.txt"
+      printmapping="obfuscatemapping.txt">
+      <!-- specify which jar files should be obfuscated -->
+      -injar ./${jarname}.jar
+      <!-- java libraries my java application depends on -->
+      -libraryjar ${java.home}/libs/rt.jar
+      <!-- the output jar file that should be created with the obfuscated java class files -->
+      -outjar ./${jarname}-release.jar
+      -keepattributes InnerClasses
+      -keep interface com.produvia.sdk.WeaverSdk$WeaverSdkCallback {*;}
+      <!-- don't obfuscate this method -->
+      -keep public class com.produvia.sdk.WeaverSdk {*;}
+      -keep public class com.produvia.sdk.DateTimeFormatterEx {*;}
+      -keep public class com.produvia.sdk.ColorConverter {*;}
+
+      -keep public class org.json.* {*;}
+
+   
+      <!-- this is a true license class that cannot be obfuscated -->
+      <!-- have to keep this one to get this to work with obfuscation -->
+      <!--
+      <keep name="de.schlichtherle.license.ftp.LicenseParam">
+        <constructor/>
+        <method name="*"/>
+      </keep>
+      -->
+   
+      <!-- more true license classes that must be left alone -->
+      <!--
+      <keep name="de.schlichtherle.license.LicenseContent">
+        <constructor/>
+        <method name="get*"/>
+        <method name="set*"/>
+      </keep>
+      <keep name="de.schlichtherle.xml.GenericCertificate">
+        <constructor/>
+        <method name="get*"/>
+        <method name="set*"/>
+      </keep>
+      -->
+    </proguard>
+     
+     
+  </target>
+
+</project>
