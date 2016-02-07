@@ -1,5 +1,5 @@
 # Weaver Rest Client Server SDK
-![WeaverRest](http://www.weavingthings.com/)
+![WeaverRest](http://www.weavingthings.com/technical_docs/smartlights_walkthrough/images/produvia_man_home.png)
 ##### Weaver Rest is a smart-lights controller reference application
 ##### powered by the [Weaver SDK]
 
