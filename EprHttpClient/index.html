@@ -41,14 +41,15 @@
 
 
 
-      <link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.blue_grey-light_blue.min.css">
+      <link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.1.1/material.blue_grey-light_blue.min.css">
 			<link rel="stylesheet" href="./css/weaver.css">
 
 			<link rel="stylesheet" href="./css/onoffswitch.css">
 
-			<script src="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.min.js"></script>
+			<script src="https://storage.googleapis.com/code.getmdl.io/1.1.1/material.min.js"></script>
 			<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 			<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+			<script src="js/annyang.min.js"></script>
 			<script src="js/jqueryrotate.js"></script>
 			<script src="js/colorconverter.js"></script>
   		<script type="text/javascript" src="js/jquery.wheelcolorpicker.js"></script>
@@ -94,7 +95,11 @@
               <label class="mdl-textfield__label" for="search">Enter your query...</label>
             </div>
           </div>
+
+          <div class="material-icons mdl-badge" id="motion" data-badge="off">visibility</div>
           <div class="material-icons mdl-badge" id="notif" data-badge="0">account_box</div>
+          <div class="material-icons mdl-badge" id="voice">keyboard_voice</div>
+
 
           <button class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--icon" id="hdrbtn" >
             <i class="material-icons">more_vert</i>
@@ -125,6 +130,18 @@
         
       -->
       <div id="main-container" class="mdl-layout__content">
+
+        <div id="demo-toggle-container" style="display: none;">
+          <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="demo-toggle" >
+              <input type="checkbox" class="mdl-switch__input" id="demo-toggle"  onchange="toggleDemoMode()">
+              <span class="mdl-switch__label" id="demo-toggle-text">Enable Weaver Developer Test-Lab Demo Mode</span>
+           </label>
+           <a target="_blank" href="http://produvia.mooo.com:8080/developers/login">Click here</a> to sign into the Test-Lab demo mode and test your app on virtual devices</a> 
+        </div>
+
+
+
+
                <!------------------ SCAN PGROGRESS: ------------------->
         <img class="centered" src="img/spinner.png" id="spinner"  />
         <div class="lights-area mdl-grid" >
@@ -180,7 +197,16 @@
 
       </div>
 
+
+      <div id="toast" class="mdl-js-snackbar mdl-snackbar">
+        <div class="mdl-snackbar__text"></div>
+        <button class="mdl-snackbar__action" type="button"></button>
+      </div>
+
     </div>   <!-- class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer mdl-layout--fixed-header" -->         
+
+
+
     <div id="openModal" class="modalDialog">
 	    <div>
 		    <a href="#close" title="Close" class="close">X</a>
@@ -188,9 +214,29 @@
         <div id="modal-text"></div>
 	    </div>
     </div>
+    <div id="loginModal" class="modalDialog">
+	    <div>`
+		    <a href="#close" title="Close" class="close">X</a>
+		    <h2 id="login-title">Login</h2>
+        <div id="login-text"></div>
+	    <div>
+        <textarea id="login_uname" placeholder="Enter username"></textarea>
+        <textarea id="login_pass" placeholder="Enter password"></textarea>
+      </div>
+      <!-- Raised button -->
+      <button class="mdl-button mdl-js-button mdl-button--raised" onclick="onSetLoginService()">
+        Submit
+      </button>
+
+	    </div>
+    </div>
+
   </body>
 </html>
 
 
 <script src="js/weaver.js"></script>
+<script src="js/weaver_voice.js"></script>
+
+
 

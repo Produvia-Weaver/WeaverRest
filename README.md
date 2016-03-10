@@ -39,7 +39,7 @@ Compile and run the server with the following args: -p SERVER_PORT -a WeaverSdkA
 
 ### Documentation
 - [Documentation]
-
+- [Tutorial]
 
 License
 ----
@@ -50,4 +50,5 @@ The Weaver Rest app is distributed under the MIT License
    [Join our beta program]: <http://weavingthings.com/#contact>
    [Documentation]: <http://weavingthings.com/weaver-sdk-reference/>
    [Weaver SDK]: <http://weavingthings.com>
+   [Tutorial]: <http://www.weavingthings.com/technical_docs/rest-server-raspberry-pi/>
    

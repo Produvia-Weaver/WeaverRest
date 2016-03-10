@@ -45,10 +45,17 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Iterator;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.Set;
+
+
+
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLParameters;
 
@@ -56,13 +63,96 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-
-import com.produvia.eprHttp.NetworkInfo;
-
+import com.produvia.weaverlinuxsdk.NetworkInfo;
+import com.produvia.weaverlinuxsdk.WeaverSdkApi;
 public class mainHttp{
-	
 
-	public static final boolean DEBUG_MODE = false; 
+  
+  ///DEMO MODE:
+  public static boolean mRunningPings = false;
+  public static HashMap mOnlinePhones = new HashMap();
+  public static HashMap mOnlinePhoneNames = new HashMap();
+  public static void initWhosHome(){
+    if( mRunningPings == true )
+      return;
+    mRunningPings = true;
+    mOnlinePhones.put("192.168.13.109", false );
+    mOnlinePhoneNames.put("192.168.13.109", "Lucy" );
+    mOnlinePhones.put("192.168.13.152", false );
+    mOnlinePhoneNames.put("192.168.13.152", "Johnny" );
+
+    mOnlinePhones.put("192.168.13.140", false );
+    mOnlinePhoneNames.put("192.168.13.140", "Alice" );
+
+    mOnlinePhones.put("192.168.13.141", false );
+    mOnlinePhoneNames.put("192.168.13.141", "Bob" );
+
+
+
+    Timer timer = new Timer();
+
+    timer.schedule( new TimerTask() {
+        public void run() {
+           updateWhosHome();
+        }
+     }, 0, 6*1000);
+
+  }
+  public static void updateWhosHome(){
+    if(NetworkInfo.mOs == null )
+      return;
+
+    // Get a set of the entries
+    Set set = mOnlinePhones.entrySet();
+    // Get an iterator
+    Iterator i = set.iterator();
+    // Display elements
+    while(i.hasNext()) {
+
+      Map.Entry me = (Map.Entry)i.next();
+      String key = (String)me.getKey();
+
+      if(NetworkInfo.mOs.indexOf("mac") >= 0) {
+        String ping_results = NetworkInfo.doLinuxCommand("ping -c 1 -W 1 " + key + " |grep packets");
+        if(ping_results.split("\\s+")[0].equals("1"))
+          mOnlinePhones.put(key, true );
+        else
+          mOnlinePhones.put(key, false );
+
+      } else {
+        String ping_results = NetworkInfo.doLinuxCommand("ping -c 1 -w 1 " + key + " |grep packets");
+        if(ping_results.split("\\s+")[3].equals("1"))
+          mOnlinePhones.put(key, true );
+        else
+          mOnlinePhones.put(key, false );
+      }
+
+       //System.out.print( mOnlinePhoneNames.get(key) + ": ");
+       //System.out.println(me.getValue());
+
+    }
+
+
+  }
+  public static void addWhosHome(JSONObject reply){
+      /////////////////////////////////////////////////////////////
+      ////demo - WHOSE HOME:
+      Set set = mOnlinePhones.entrySet();
+      // Get an iterator
+      Iterator i = set.iterator();
+      // Display elements
+      JSONObject whosHome = new JSONObject();
+      while(i.hasNext()) {
+        Map.Entry me = (Map.Entry)i.next();
+        String key = (String)me.getKey();
+
+        whosHome.put( (String)mOnlinePhoneNames.get(key), me.getValue() );
+      }
+      reply.put("whos_home_demo", whosHome);
+  }
+	/////
+
+	public static final boolean DEBUG_MODE = true; 
 	private static final boolean USE_SSL = false;
 	
 	
@@ -145,33 +235,43 @@ public class mainHttp{
           last_arg = s;
 
         }
-	if( API_KEY == null ){
-           showUsage();
-	}
+	      if( API_KEY == null ){
+                 showUsage();
+	      }
     }
 
     public static void main(final String... args) throws IOException {
 
-      parseArgs(args);
-      NetworkInfo.init();
-      
+        //DEMODEMO
+        //initWhosHome();
+        ////DEMODEMO
+        parseArgs(args);
+        NetworkInfo.init();
 
-      HttpServer server = null;
-      if(USE_SSL)
-    	  server = buildHttpsServer();
-      else
-    	  server = HttpServer.create(new InetSocketAddress(PORT), BACKLOG);
-        
 
-      server.createContext("/add_certificate", httpHandler);
-      server.createContext("/init", httpHandler);
-      server.createContext("/scan", httpHandler );
-      server.createContext("/services_get", httpHandler);
-      server.createContext("/services_set", httpHandler);
-      server.createContext("/register", httpHandler);
-      server.createContext("/login", httpHandler);
-      server.start();
-      initSdk();
+        HttpServer server = null;
+        if (USE_SSL)
+            server = buildHttpsServer();
+        else
+            server = HttpServer.create(new InetSocketAddress(PORT), BACKLOG);
+
+
+        server.createContext("/add_certificate", httpHandler);
+        server.createContext("/init", httpHandler);
+        server.createContext("/scan", httpHandler);
+        server.createContext("/services_get", httpHandler);
+        server.createContext("/services_set", httpHandler);
+        server.createContext("/services_update", httpHandler);
+        server.createContext("/register", httpHandler);
+        server.createContext("/login", httpHandler);
+        server.createContext("/demomode", httpHandler);
+
+        server.start();
+        //setup the device parameters:
+        System.out.println("====Weaver Server Started====\nAddress: http" + 
+               (USE_SSL?"s":"") + "://"+ NetworkInfo.mDeviceIp + ":" + PORT);
+        System.out.println("SYSTEM INFO");
+        NetworkInfo.printInfo();
     }
 
     private static Map<String, List<String>> getRequestParameters(final URI requestUri) {
@@ -268,13 +368,18 @@ public class mainHttp{
                     		scan(he, request);
                     	else if(path.equals("/services_set"))
                     		servicesSet(he, request);
+                        else if(path.equals("/services_update"))
+                            servicesUpdate(he, request);
                     	else if(path.equals("/services_get"))
                     		servicesGet(he, request);
                     	else if(path.equals("/register"))
                     		register(he, request);
-                    	else if(path.equals("/login"))
+                    	else if (path.equals("/login"))
                     		login(he, request);
-                    	
+                    	else if(path.equals("/demomode"))
+                    		demomode(he, request);
+
+
                     	else{
                     		sendReplyAndClose(he, new JSONObject("{ \"success\": false, \"info\": \"User not logged in\"}") );
                     	}
@@ -345,16 +450,16 @@ public class mainHttp{
 		final String api_key = request.getJSONObject("body").getString("api_key");
 		final String authentication_token = getAuthFromHeader(request.getJSONObject("headers"));
 		
-        WeaverSdk.init(api_key, authentication_token, 1);
-        //setup the device parameters:
-        initSdk();
+        WeaverSdkApi.init(api_key, authentication_token, 1);
+  
+
         //setup network:
         if(authentication_token.isEmpty()){
             sendReplyAndClose(he, new JSONObject("{ \"success\": true, \"info\": \"Log user in, in order to complete initialization\"}"));
             return;
         }
         else {//verify the auth token is valid:
-            WeaverSdk.login(null, null, new WeaverSdk.WeaverSdkCallback() {
+            WeaverSdkApi.login(null, null, new WeaverSdk.WeaverSdkCallback() {
 				
 				@Override
 				public void onTaskUpdate(int arg0, JSONObject arg1) {
@@ -478,7 +583,7 @@ public class mainHttp{
 
 		final String operation = request.getJSONObject("body").getString("operation");
 		if(operation.equals("start")){
-			WeaverSdk.startScan(new WeaverSdk.WeaverSdkCallback() {
+			WeaverSdkApi.startScan(new WeaverSdk.WeaverSdkCallback() {
 				@Override
 				public void onTaskUpdate(int flag, JSONObject response) {
 					// this means a new service has been found:
@@ -486,7 +591,7 @@ public class mainHttp{
 			        	debugPrint("SCAN UPDATE: action" + flag + " returned: " + response.toString());
 
 			            //this flag indicates that a new service was discovered in the scan:
-			            if (flag == WeaverSdk.ACTION_SERVICES_SCAN) {
+			            if (flag == WeaverSdk.ACTION_SERVICES_SCAN ) {
 			                if (response.getBoolean("success")) {
 			                	debugPrint("SERVICE: " + response.toString());
 			                    handleReceivedServices(response.getJSONObject("data"));
@@ -516,15 +621,19 @@ public class mainHttp{
 			});
 			reply.put("info", "Scan started - start polling with \"info\" for newly scanned services and services requiring login");
 		}else if(operation.equals("stop")){
-			WeaverSdk.stopScan();
+			WeaverSdkApi.stopScan();
 			reply.put("info", mLatestScanInfo);
 		
 		}else {//info
 			
-			reply.put("info", WeaverSdk.isDiscoveryRunning()?"Scan running":"Scan idle. " + "Discovered Services count is " + mScannedServices.length());
+			reply.put("info", WeaverSdkApi.isDiscoveryRunning()?"Scan running":"Scan idle. " + "Discovered Services count is " + mScannedServices.length());
 			reply.put("count", mScannedServices.length());
 			if(mMobileCount != null)
 				reply.put("mobileCount", mMobileCount);
+
+      //DEMO:
+      addWhosHome(reply);
+
 		}
 		sendReplyAndClose(he, reply);
 		
@@ -542,7 +651,7 @@ public class mainHttp{
 		
 		final String authentication_token = getAuthFromHeader(request.getJSONObject("headers"));
 		final String api_key = request.getJSONObject("body").getString("api_key");
-		WeaverSdk.setServices(new WeaverSdk.WeaverSdkCallback() {
+		WeaverSdkApi.setServices(new WeaverSdk.WeaverSdkCallback() {
 			
 			@Override
 			public void onTaskUpdate(int flag, JSONObject json) {
@@ -579,7 +688,62 @@ public class mainHttp{
 		
 	}
 	
-	
+	private static void demomode(final HttpExchange he, JSONObject request){
+		  /*
+		   * 
+		   * HEADER= Authorization: Bearer authentication_token"
+		   * network_id is optional if not present will get services for all networks
+		   * json = {"api_key": API_KEY, "network_id": network_id } 
+		   */
+  		final String authentication_token = getAuthFromHeader(request.getJSONObject("headers"));
+  		final String api_key = request.getJSONObject("body").getString("api_key");
+      final boolean enable = request.getJSONObject("body").getBoolean("enable");
+			
+      WeaverSdkApi.setDemoMode(enable, new WeaverSdk.WeaverSdkCallback() {
+			
+			@Override
+			public void onTaskUpdate(int arg0, JSONObject arg1) {
+			}
+			
+			@Override
+			public void onTaskCompleted(int flag, JSONObject json) {
+				debugPrint("demomode toggle completed: action" + flag + " returned: " + json.toString());
+				sendReplyAndClose(he, json);
+			}
+			
+		});
+	}
+
+
+
+
+    private static void servicesUpdate(final HttpExchange he, JSONObject request){
+		/*
+		 *
+		 * HEADER= Authorization: Bearer authentication_token"
+		 * network_id is optional if not present will get services for all networks
+		 * json = {"api_key": API_KEY, "network_id": network_id }
+		 */
+        final String authentication_token = getAuthFromHeader(request.getJSONObject("headers"));
+        final String api_key = request.getJSONObject("body").getString("api_key");
+
+        WeaverSdkApi.updateServices(new WeaverSdk.WeaverSdkCallback() {
+
+            @Override
+            public void onTaskUpdate(int arg0, JSONObject arg1) {
+            }
+
+            @Override
+            public void onTaskCompleted(int flag, JSONObject json) {
+                //if it was a login service and the result is successfull - remove it from the services list:
+                debugPrint("SERVICE_UPDATE COMPLETED: action" + flag + " returned: " + json.toString());
+                sendReplyAndClose(he, json);
+            }
+
+        },
+        request.getJSONObject("body"));
+    }
+
 	private static void servicesGet(final HttpExchange he, JSONObject request){
 		/*
 		 * 
@@ -594,7 +758,7 @@ public class mainHttp{
 			network_id = request.getJSONObject("body").getString("network_id");
 		}
 			
-        WeaverSdk.servicesGet(network_id, new WeaverSdk.WeaverSdkCallback() {
+        WeaverSdkApi.servicesGet(network_id, new WeaverSdk.WeaverSdkCallback() {
 			
 			@Override
 			public void onTaskUpdate(int arg0, JSONObject arg1) {
@@ -630,11 +794,11 @@ public class mainHttp{
 		 * json = {"api_key": API_KEY, "email": email, "username":username, "password": password } 
 		 */
 		final String api_key = request.getJSONObject("body").getString("api_key");
-		WeaverSdk.init(api_key, null, 1);
+		WeaverSdkApi.init(api_key, null, 1);
 		final String email = request.getJSONObject("body").getString("email");
 		final String username = request.getJSONObject("body").getString("username");
 		final String password = request.getJSONObject("body").getString("password");
-		WeaverSdk.register(email, username, password, password, new WeaverSdk.WeaverSdkCallback() {
+		WeaverSdkApi.register(email, username, password, password, new WeaverSdk.WeaverSdkCallback() {
 			
 			@Override
 			public void onTaskUpdate(int arg0, JSONObject arg1) {}
@@ -665,13 +829,13 @@ public class mainHttp{
 		 */
 		
 		final String api_key = request.getJSONObject("body").getString("api_key");
-		WeaverSdk.init(api_key, null, 1);
+		WeaverSdkApi.init(api_key, null, 1);
 		final String email = request.getJSONObject("body").getString("email");
 		final String password = request.getJSONObject("body").getString("password");
 		
 		debugPrint("Logging in with: email: " + email + " pass: " + password + " api_key: " + api_key);
 		
-		WeaverSdk.login(email, password,new WeaverSdk.WeaverSdkCallback() {
+		WeaverSdkApi.login(email, password,new WeaverSdk.WeaverSdkCallback() {
 			@Override
 			public void onTaskUpdate(int arg0, JSONObject arg1) {}
 			
@@ -696,34 +860,6 @@ public class mainHttp{
 	
 	
 	
-
-	private static void initSdk(){
-		
-		WeaverSdk.initDeviceParams(
-				NetworkInfo.mDeviceName,
-				NetworkInfo.mDeviceMac,
-				"Weaver Server",
-				"0",
-				"",
-				NetworkInfo.mOs,
-				"0");
-
-        
-        System.out.println("====Weaver Server Started====\nAddress: http" + 
-                           (USE_SSL?"s":"") + "://"+ NetworkInfo.mDeviceIp + ":" + PORT);
-
-        System.out.println("SYSTEM INFO");
-        NetworkInfo.printInfo();
-        
-        WeaverSdk.initNetworkParams(true,
-                NetworkInfo.mDeviceIp,
-                NetworkInfo.mGlobalIp, 
-                NetworkInfo.mSsid, 
-                NetworkInfo.ipToInteger(NetworkInfo.mDefaultGateway), 
-                NetworkInfo.mDns);
-		    
-	}
-
 
 
     public static Boolean isGlobal(JSONObject service) {

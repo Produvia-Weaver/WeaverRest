@@ -103,6 +103,40 @@ function rgb2Hsl( rgb ) {
 }
 
 
+function colorToStr( color ) {
+	var result = "";
+	var r = Math.round(color.r).toString(16);
+	if( r.length == 1) {
+		r = "0" + r;
+	}
+	var g = Math.round(color.g).toString(16);
+	if( g.length == 1) {
+		g = "0" + g;
+	}
+	var b = Math.round(color.b).toString(16);
+	if( b.length == 1) {
+		b = "0" + b;
+	}
+	result += r + g + b;
+  return result;				
+}
+
+function strToColor( val ) {
+
+  var color = {};
+  if(val.match(/^[0-9a-f]{6}$/i) != null) {
+		if( isNaN( color.r = parseInt(val.substr(0, 2), 16) ) ) {
+			color.r = 255;
+		}
+		if( isNaN( color.g = parseInt(val.substr(2, 2), 16) ) ) {
+      color.g = 255;
+		}
+		if( isNaN( color.b = parseInt(val.substr(4, 2), 16) ) ) {
+			color.b = 255;
+		}
+	}
+  return color;
+}
 /*test:
 rgb = {r:220,g:30,b:60};
 

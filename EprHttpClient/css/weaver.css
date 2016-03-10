@@ -556,4 +556,27 @@ html {
     url('../img/ic_light_bulb.png') bottom right 15% no-repeat #cccccc;
 }
 
+.material-icons.active {
+  color: rgba(255, 0, 0, 0.54);
+}
+
+
+.mdl-card-light-color {
+	width: 263px;
+  height: 320px;
+
+}
+.mdl-card__media {
+	margin: 0;
+  background-color: #eeeeee;
+}
+.mdl-card__actions {
+	display: flex;
+	box-sizing:border-box;
+	align-items: center;
+}
+.mdl-card__actions > .mdl-button--icon {
+	margin-right: 3px;
+	margin-left: 3px;
+}
 
