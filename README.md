@@ -47,7 +47,7 @@ License
 The Weaver Rest app is distributed under the MIT License
 
    [JSON API]: <http://weavingthings.com/weaver-sdk-reference/>
-   [Join our beta program]: <http://weavingthings.com/#contact>
+   [Join our beta program]: <https://produvia-net.com/developers>
    [Documentation]: <http://weavingthings.com/weaver-sdk-reference/>
    [Weaver SDK]: <http://weavingthings.com>
    [Tutorial]: <http://www.weavingthings.com/technical_docs/rest-server-raspberry-pi/>
