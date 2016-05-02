@@ -15,7 +15,7 @@
 .jQWCP-wWidget {
 	position: absolute;
 	width: 250px;
-	height: 180px;
+	height: 140px;
 	background: #eee;
 	box-shadow: 1px 1px 4px rgba(0,0,0,.5);
 	border-radius: 4px;
@@ -34,8 +34,8 @@
 	background-size: contain;
 	position: relative;
 	float: left;
-	width: 180px;
-	height: 180px;
+	width: 140px;
+	height: 140px;
 	-webkit-border-radius: 90px;
 	-moz-border-radius: 50%;
 	border-radius: 50%;
@@ -79,8 +79,8 @@
 .jQWCP-slider-wrapper,
 .jQWCP-wPreview {
 	position: relative;
-	width: 20px;
-	height: 180px;
+	width: 15px;
+	height: 140px;
 	float: left;
 	margin-right: 10px;
 }

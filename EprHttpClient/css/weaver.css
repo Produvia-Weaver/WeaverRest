@@ -453,6 +453,13 @@ html {
     margin-right: auto;
   }
 
+  div.centered {
+    position: fixed;
+    left: 50%;
+    top: 33%;
+  }
+
+
 
   .hidden {
       visibility: hidden;
@@ -548,12 +555,12 @@ html {
 }
 .demo-card-square > .mdl-card__title-light {
   color: #000000;
-  padding-top: 40px;
+  padding-top: 20px;
   padding-left: 10px;
   padding-bottom: 10px;
   
   background:
-    url('../img/ic_light_bulb.png') bottom right 15% no-repeat #cccccc;
+    url('../img/ic_light_bulb.png') bottom right 15% no-repeat #aaaaaa;
 }
 
 .material-icons.active {
@@ -580,3 +587,15 @@ html {
 	margin-left: 3px;
 }
 
+
+
+
+input[type=range][orient=vertical]
+{
+    writing-mode: bt-lr; /* IE */
+    -webkit-appearance: slider-vertical; /* WebKit */
+    width: 8px;
+    height: 175px;
+    padding: 0 5px;
+    margin-top: 175px;
+}

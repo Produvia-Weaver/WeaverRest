@@ -172,7 +172,8 @@ public class mainHttp{
 	
 	private static final String FUNC_SERVICES   = "services";
 	
-    private static final long MAX_TIME_SINCE_LAST_SEEN_IN_MILLIS_TO_BE_CONSIDERED_ONLINE = (1000*60*60*24*2);
+    private static final long MAX_TIME_TO_BE_CONSIDERED_ONLINE = (10*60);
+    private static final long MAX_TIME_TO_BE_CONSIDERED_ONLINE_LAB = (2*60);	
 	
 	
 	
@@ -214,7 +215,9 @@ public class mainHttp{
         boolean next_arg_parameter = false;
         String last_arg = null;
         for (String s: args) {
-          if( s.equals("-a") || s.equals("-p") ){
+          if(s.equals("-all")){
+            WeaverSdk.RETURN_NON_IOT_SERVICES = true;
+          }else if( s.equals("-a") || s.equals("-p") ){
             if(next_arg_parameter)
                 showUsage();
             next_arg_parameter = true;
@@ -511,9 +514,10 @@ public class mainHttp{
             String service_type = service.getString("service");
 
             //if the services haven't been seen in a while - we won't display them anymore:
-            Calendar last_seen = DateTimeFormatterEx.getCalendarFromISO(service.getString("last_seen"));
-            long difference = Calendar.getInstance().getTimeInMillis() - last_seen.getTimeInMillis();
-            if(difference > MAX_TIME_SINCE_LAST_SEEN_IN_MILLIS_TO_BE_CONSIDERED_ONLINE)
+            Integer seconds_since_last_seen = 0;
+            if(service.has("seconds_since_last_seen"))
+               seconds_since_last_seen = service.getInt("seconds_since_last_seen");
+            if(seconds_since_last_seen > MAX_TIME_TO_BE_CONSIDERED_ONLINE)
                 continue;
 
 
@@ -767,25 +771,49 @@ public class mainHttp{
 			@Override
 			public void onTaskCompleted(int flag, JSONObject json) {
 				debugPrint("SERVICES GET COMPLETED: action" + flag + " returned: " + json.toString());
-				//add all the login services and send back:
-				if(json.getJSONObject("data").has("services")){
 					
 					
+			  //add all the login services:
+			  if(json.getJSONObject("data").has("services")){
 					for(int service_idx = 0; service_idx < mScannedServices.length(); service_idx++ ) {
 	                	JSONObject scannedService = mScannedServices.getJSONObject(service_idx).getJSONArray("services").getJSONObject(0);
-	                    if(scannedService.getString("service").equals("login")) {
+            if(scannedService.getString("service").equals("login"))
 	                    	json.getJSONObject("data").getJSONArray("services").put(scannedService);
-	                    }
 					}
 				} else if(mScannedServices.length() >= 0){
 					json.getJSONObject("data").put("services", mScannedServices);
 				}
+        //remove all the old services:
+        json = removeStaleServices(json);
 				sendReplyAndClose(he, json);
 			}
 			
 		});
 	}
 	
+  //*
+  //* remove stale  services:
+  //*
+  private static JSONObject removeStaleServices(JSONObject json){
+    JSONArray services = json.getJSONObject("data").getJSONArray("services");
+    JSONArray new_services = new JSONArray();
+    for(int i =0; i< services.length(); i++ ){
+      JSONObject service = services.getJSONObject(i);
+      JSONObject device = json.getJSONObject("data").getJSONObject("devices_info").getJSONObject(service.getString("device_id"));
+      System.out.println(device.toString());
+      boolean is_lab_device = device.has("mac") && device.getString("mac").startsWith("000000000000%");
+      if(service.has("seconds_since_last_seen") ){
+        Integer ssls = service.getInt("seconds_since_last_seen");
+        if( (is_lab_device && ssls > MAX_TIME_TO_BE_CONSIDERED_ONLINE_LAB) ||
+            (ssls > MAX_TIME_TO_BE_CONSIDERED_ONLINE) ){
+          continue;
+        }
+      }
+      new_services.put(service);
+    }
+    json.getJSONObject("data").put("services", new_services);
+    return json;
+  }
 	
 	private static void register(final HttpExchange he, JSONObject request){
 		/*

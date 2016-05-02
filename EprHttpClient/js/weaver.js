@@ -3,9 +3,7 @@
 //*******************
 //Change the following line to the EprHttpServer's IP address and the port:
 var WEAVER_SERVER  = "http://127.0.0.1:8000/"
-//var WEAVER_SERVER  = "http://192.168.13.249:8000/"
-//var WEAVER_SERVER = "http://azureuser@produvia-lab.cloudapp.net:80/";
-//var WEAVER_SERVER = "http://23.96.27.238/";
+var WEAVER_SERVER  = "http://192.168.13.227:8000/"
 
 var dbg = false;
 
@@ -31,7 +29,8 @@ var motionSensorService = null;
 //************************************
 
 var mIotServices = {};
-var noLightServicesAppended = true;
+var noLightColorServicesAppended = true;
+var noLightDimmerServicesAppended = true;
 
 //************************************
 //who's home globals:
@@ -97,13 +96,11 @@ function showSpinner(){
     return;
   SPINNING = true;
   print("spinner show");
-//  if($("#spinner").is(":visible") )
-//    return;
   print("showing");
-  $("#spinner").show();
+  $("#spinner-div").show();
   var angle = 0;
   var spinner_interval = setInterval(function(){
-    if($("#spinner").is(":visible")  == false)
+    if($("#spinner-div").is(":visible")  == false)
       clearInterval(spinner_interval);
     angle+=9;
     $("#spinner").rotate({"angle":angle});
@@ -114,7 +111,7 @@ function hideSpinner(){
   if(!SPINNING)
     return;
   SPINNING = false;   
-  $("#spinner").hide();
+  $("#spinner-div").hide();
 }
 
 
@@ -198,13 +195,6 @@ function WeaverInit(){
 }
 
 //************************************
-// Lab Demo:
-//************************************
-function WeaverLabDemoMode(enable){
-  var json = {"enable":enable};
-  doWeaverOp( "demomode", json, onLabDemoModeEnableDisable );
-}
-//************************************
 // Scan for services:
 //************************************
 function WeaverScan(op){
@@ -267,16 +257,6 @@ function onInitialized(json){
 }
 
 
-function onLabDemoModeEnableDisable(){
-  WeaverScan("stop"); 
-  //remove the services cards:  
-  mIotServices = {};
-  $(".lights-area").empty();
-  showSpinner();
-  WeaverScan("start");   
-  WeaverGetServices();
- 
-}
 
 
 function onScanning(json){
@@ -363,6 +343,7 @@ function onServicesGet(json){
   //check if any mobiles are inside the network:
   devices_info = json.data.devices_info
 
+
   
   var now = new Date();
   var second = 1000;
@@ -434,9 +415,16 @@ function onServicesGet(json){
 // WeaverServer Callback helper functions:
 //*******************************************
 function isLightService(service){
+  return stringStartsWith(service.service, "_light_" );
+}
+
+function isLightColorService(service){
   return stringStartsWith(service.service, "_light_color" );
 }
 
+function isLightDimmerService(service){
+  return stringStartsWith(service.service, "_light_dimmer" );
+}
 function isSensorService(service){
   return stringStartsWith(service.service, "_sensor_generic" );
 }
@@ -675,9 +663,13 @@ $(function() {
 
 
 
+var ALREADY_PROMPTED = {}
 
 function promptLogin(loginService, responseData) {
 
+  if(ALREADY_PROMPTED[loginService.id]==true)
+    return;
+  ALREADY_PROMPTED[loginService.id]=true
   var FIRST_LOGIN_TYPE_NORMAL      = "normal";
   var FIRST_LOGIN_TYPE_KEY = "key";
   var FIRST_LOGIN_TYPE_PRESS2LOGIN = "press2login";
@@ -834,6 +826,29 @@ function displayService(service, device, network, service_type){
 
 function appendLightStructure(service, device_type){
 
+  master_service = $.extend({}, service);
+  master_service.db_id ="MASTER";
+  master_service.name = "Master Switch";
+  device_type = "(" + device_type + ")";
+
+  if( isLightColorService(service) ){
+    if(noLightColorServicesAppended) {
+      noLightColorServicesAppended = false;
+      appendLightColorStructure(master_service, "");
+    }
+    appendLightColorStructure(service, device_type);
+  } else {
+    if(noLightDimmerServicesAppended) {
+      noLightDimmerServicesAppended = false;
+      appendLightDimmerStructure(master_service, "");
+    }
+    appendLightDimmerStructure(service, device_type);
+  }
+  componentHandler.upgradeDom();    
+  return;
+}
+
+function appendLightColorStructure(service, device_type){
   checked = "";
   if(service.properties.power.on)
     checked = "checked";
@@ -844,60 +859,19 @@ function appendLightStructure(service, device_type){
            b:service.properties.color.bri}) );
 
 
-  if(noLightServicesAppended) {
-    noLightServicesAppended = false;
-    //add a master switch:
-    $(".lights-area").append(
+  $(".light-color-area").append(
       "<div class=\"mdl-card mdl-card-light-color mdl-cell mdl-cell--4-col mdl-cell--12-col-tablet mdl-shadow--2dp\">"+
       "        <figure class=\"mdl-card__media\">"+
-      "          <input type=\"text\" class=\"picker\" id=\"MASTER\" data-wcp-layout=\"block\" />"+
+      "  <input type=\"text\" class=\"picker\" id=\"" + service.db_id + "\" data-wcp-layout=\"block\" />" +
       "        </figure>"+
       "        <div class=\"mdl-card__title\">"+
-      "          <h1 class=\"mdl-card__title-text\">Master Switch</h1>"+
-      "        </div>"+
-      "        <div class=\"mdl-card__actions mdl-card--border\">"+
-      "          <div class=\"mdl-layout-spacer\"></div>"+
-      "          <label class=\"mdl-switch mdl-js-switch mdl-js-ripple-effect\" for=\"switchMASTER\">"+
-      "            <input type=\"checkbox\" class=\"mdl-switch__input onoffswitch-checkbox\" db_id=\"MASTER\" id=\"switchMASTER\">"+
-      "            <span class=\"mdl-switch__label\"></span>"+
-      "          </label>"+
-      "          <div class=\"mdl-textfield mdl-js-textfield\" style=\"width:70px\">"+
-      "            <input class=\"mdl-textfield__input\" type=\"text\" id=\"rgbMASTER\" maxlength=\"6\" >"+
-      "          </div>"+
-      "        </div>"+
-      "      </div>"  +
-      "<script>$( \"#switchMASTER\" ).click(onOnOff);</script>");
-
-
-
-        $(".picker").wheelColorPicker('setColor', initial_color);
-        $("#rgbMASTER").val(rgb);
-        $("#rgbMASTER").change(function(){setRgbColor("MASTER", $("#rgbMASTER").val()) });;
-        $(".picker").on('sliderup', function() {
-            hsv_str = $(this).wheelColorPicker('getValue', 'hsb');
-            hsv = $(this).wheelColorPicker('getColor');
-            print(hsv);
-            onColorChanged({h:Math.round(hsv.h*360), s: hsv.s, b:hsv.v}, "MASTER" );
-	      });
-  
-
-  }
-
-
-  $(".lights-area").append(
-
-      "<div class=\"mdl-card mdl-card-light-color mdl-cell mdl-cell--4-col mdl-cell--12-col-tablet mdl-shadow--2dp\">"+
-      "  <figure class=\"mdl-card__media\">"+
-      "   <input type=\"text\" class=\"picker\" id=\"" + service.db_id + "\" data-wcp-layout=\"block\" />" +
-      "  </figure>"+
-      "        <div class=\"mdl-card__title\">"+
-      "          <h1 class=\"mdl-card__title-text\">"+service.name+" ("+device_type+")"+"</h1>"+
+      "          <h1 class=\"mdl-card__title-text\">"+service.name+" "+device_type+"</h1>"+
       "        </div>"+
       "        <div class=\"mdl-card__actions mdl-card--border\">"+
       "          <div class=\"mdl-layout-spacer\"></div>"+
       "          <label class=\"mdl-switch mdl-js-switch mdl-js-ripple-effect\" for=\"switch" + service.db_id + "\">"+
       "           <input type=\"checkbox\" db_id=\""+ service.db_id+"\" class=\"mdl-switch__input onoffswitch-checkbox\" id=\"switch" + service.db_id + "\" " + checked + ">" +
-      "           <span class=\"mdl-switch__label\"></span>"+
+      "            <span class=\"mdl-switch__label\"></span>"+
       "          </label>"+
       "          <div class=\"mdl-textfield mdl-js-textfield\" style=\"width:70px\">"+
       "            <input class=\"mdl-textfield__input\" type=\"text\" id=\"rgb" + service.db_id + "\" maxlength=\"6\" >"+
@@ -905,25 +879,51 @@ function appendLightStructure(service, device_type){
       "        </div>"+
       "      </div>"  +
       "<script>$( \"#switch"+ service.db_id +"\" ).click(onOnOff);</script>");
-
-
-
   print("setcolor: "+ JSON.stringify(initial_color));
-  $(".picker").wheelColorPicker('setColor', initial_color);
+
+
+
+        $(".picker").wheelColorPicker('setColor', initial_color);
   $("#rgb"+service.db_id).val(rgb);
   $("#rgb"+service.db_id).change(function(){setRgbColor(service.db_id, $("#rgb"+service.db_id).val()) });;
-  $(".picker").on('sliderup', function() {
-      hsv_str = $(this).wheelColorPicker('getValue', 'hsb');
-      hsv = $(this).wheelColorPicker('getColor');
-      print(hsv);
+        $(".picker").on('sliderup', function() {
+            hsv_str = $(this).wheelColorPicker('getValue', 'hsb');
+            hsv = $(this).wheelColorPicker('getColor');
+            print(hsv);
       onColorChanged({h:Math.round(hsv.h*360), s: hsv.s, b:hsv.v}, $(this).attr("id"));
-	});
-
-
-
-  print("power: " + service.properties.power.on);
+	      });
   print("hsb: " + initial_color  );
-  componentHandler.upgradeDom();
+} 
+  
+
+
+function appendLightDimmerStructure(service, device_type){
+
+  checked = "";
+  if(service.properties.power.on)
+    checked = "checked";
+
+  initial_dimmer = Math.ceil(service.properties.dimmer.level * 100);
+
+  $(".light-dimmer-area").append(
+      "<div class=\"mdl-card mdl-card-light-color mdl-cell mdl-cell--4-col mdl-cell--12-col-tablet mdl-shadow--2dp\">"+
+      "        <div class=\"mdl-card__title\">"+
+      "          <h1 class=\"mdl-card__title-text\">"+service.name+" "+ device_type +"</h1>" +
+      "        </div>"+
+      "        <div class=\"mdl-card__actions mdl-card--border\">"+
+      "          <div class=\"mdl-layout-spacer\"></div>"+
+      "          <label class=\"mdl-switch mdl-js-switch mdl-js-ripple-effect\" for=\"switch" + service.db_id + "\">"+
+      "           <input type=\"checkbox\" db_id=\""+ service.db_id+"\" class=\"mdl-switch__input onoffswitch-checkbox\" id=\"switch" + service.db_id + "\" " + checked + ">" +
+      "           <span class=\"mdl-switch__label\"></span>"+
+      "          </label>"+
+      "          <input class=\"mdl-slider mdl-js-slider dimmer\" type=\"range\"  orient=\"vertical\" id=\"" + service.db_id + "\" min=\"0\" max=\"100\" value=\""+initial_dimmer+"\" tabindex=\"0\"" +
+      "  onchange=\"onDimmerChanged(this.value, this.id );\">" +
+      "        </div>"+
+      "      </div>"  +
+      "<script>$( \"#switch"+ service.db_id +"\" ).click(onOnOff);</script>");
+
+
+
 
 }
 
@@ -941,7 +941,7 @@ function appendGenericSensor(service, device_type){
   });
 
   html += "</div>";
-  $(".lights-area").prepend(html);
+  $(".light-color-area").prepend(html);
   componentHandler.upgradeDom();
 */
   motionSensorService = service;
@@ -1000,7 +1000,7 @@ function onColorChanged(color, db_id) {
     //now set the color:
     $.each(mIotServices, function(db_id, v) {
       //set the picker color:
-      if(isLightService(v.service))
+      if(isLightColorService(v.service))
         onColorChanged(color, db_id);
     });
     return;
@@ -1009,7 +1009,7 @@ function onColorChanged(color, db_id) {
 
   print(db_id + "COLOR: " + JSON.stringify(color));
   service = mIotServices[db_id].service;
-  if(!isLightService(service) )
+  if(!isLightColorService(service) )
     return;
   service.properties.color.hue = color.h;
   service.properties.color.sat = color.s;
@@ -1032,7 +1032,35 @@ function onColorChanged(color, db_id) {
   }
 }
 
+function onDimmerChanged(value, db_id){
 
+  if(db_id == "MASTER" ){
+    $(".dimmer").each( function(){
+      $(this).val(value);
+    });
+
+    //now set the color:
+    $.each(mIotServices, function(db_id, v) {
+      //set the picker color:
+      if(isLightDimmerService(v.service))
+        onDimmerChanged(value, db_id);
+    });
+    return;
+  }
+
+  service = mIotServices[db_id].service;
+  if(!isLightDimmerService(service) )
+    return;
+  service.properties.dimmer.level = value/100;
+  service.properties.power.on = true;
+
+  var light_switch = $("#switch"+  db_id  );
+  if( !light_switch.is(':checked') ){
+    light_switch.trigger('click');
+  } else {
+    WeaverSetServices(buildServiceJson(service));
+  }
+}
 
 function onOnOff(){
   //first check or uncheck:
@@ -1056,20 +1084,6 @@ function onOnOff(){
 }
 
 
-function toggleLabDemoMode(){
-
-  enable = false
-  if ($('#demo-toggle').is(":checked")){
-    enable = true;
-    $("#demo-toggle-text").text("Disable Test-Lab Demo Mode");
-  } else {
-    $("#demo-toggle-text").text("Enable Weaver Developer Test-Lab Demo Mode");
-  }
-
-  WeaverLabDemoMode(enable)
-
-
-}
 
 
 function allOn(){
@@ -1127,7 +1141,6 @@ function onPolledServicesUpdated(data){
 }
 
 function pollService(service){
-  console.log("pollService: " + JSON.stringify(service));
   WeaverUpdateServices(buildServiceJson(service), onPolledServicesUpdated);
 }
 
@@ -1135,6 +1148,8 @@ function pollService(service){
 
 
 function handleNooneHome(){
+  if(!demomode)
+    return;
   //first check if there are any services and if they are on:
   if(handledNooneHome)
     return;
@@ -1153,6 +1168,8 @@ function handleNooneHome(){
 }
 
 function handleSomeoneGotHome(mobile){
+  if(!demomode)
+    return;
   //first check if there are any services and if they are on:
   if(handledSomeoneHome)
     return;

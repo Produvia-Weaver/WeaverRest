@@ -115,9 +115,9 @@
       <div class="mdl-layout__drawer mdl-color--blue-grey-900 mdl-color-text--blue-grey-50">
 			  <span class="mdl-layout-title">Weaver Admin</span>
 				<nav class="mdl-navigation">
-				  <a class="mdl-navigation__link" href="#">Lab</a>
-				  <a class="mdl-navigation__link" href="#">Account</a>
-				  <a class="mdl-navigation__link" href="#">Status</a>
+				  <a class="mdl-navigation__link" href="http://produvia-lab.cloudapp.net/">Developers Portal</a>
+				  <a class="mdl-navigation__link" href="http://produvia-lab.cloudapp.net/demo/index.html">Virtual Lab Demo</a>
+				  <a class="mdl-navigation__link" href="https://produvia-net.com/users/sign_up">Get your API-Key</a>
 				</nav>
 		  </div>
       <div class="mdl-layout__drawer-right">
@@ -132,19 +132,26 @@
       <div id="main-container" class="mdl-layout__content">
 
         <div id="demo-toggle-container" style="display: none;">
-          <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="demo-toggle" >
-              <input type="checkbox" class="mdl-switch__input" id="demo-toggle"  onchange="toggleDemoMode()">
-              <span class="mdl-switch__label" id="demo-toggle-text">Enable Weaver Developer Test-Lab Demo Mode</span>
-           </label>
-           <a target="_blank" href="http://produvia.mooo.com:8080/developers/login">Click here</a> to sign into the Test-Lab demo mode and test your app on virtual devices</a> 
+          <a href="http://produvia-lab.cloudapp.net/demo/index.html" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" style="margin: 10px 10px 10px 10px;">
+            Test-Lab Demo
+          </a>
+          <a  target="_blank" href="http://produvia-lab.cloudapp.net/" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored" style="margin: 10px 10px 10px 10px;">
+            Developers Portal
+          </a>
         </div>
 
 
 
 
                <!------------------ SCAN PGROGRESS: ------------------->
-        <img class="centered" src="img/spinner.png" id="spinner"  />
-        <div class="lights-area mdl-grid" >
+        <div class="centered" id="spinner-div" />
+          <img src="img/spinner.png" id="spinner"  />
+          <h4>Scanning...</h4>
+        </div>
+        <div class="light-color-area mdl-grid" >
+
+        </div>
+        <div class="light-dimmer-area mdl-grid" >
 
         </div>
         <!------------------ LOGIN-REGISTER: ------------------->
