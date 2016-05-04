@@ -3,7 +3,7 @@
 //*******************
 //Change the following line to the EprHttpServer's IP address and the port:
 var WEAVER_SERVER  = "http://127.0.0.1:8000/"
-//var WEAVER_SERVER = "http://produvia-lab.cloudapp.net:8105/"
+//var WEAVER_SERVER = "https://weavingthings.com:8105/"
 
 var dbg = false;
 
