@@ -514,11 +514,13 @@ public class mainHttp{
             String service_type = service.getString("service");
 
             //if the services haven't been seen in a while - we won't display them anymore:
+            /*
             Integer seconds_since_last_seen = 0;
             if(service.has("seconds_since_last_seen"))
                seconds_since_last_seen = service.getInt("seconds_since_last_seen");
             if(seconds_since_last_seen > MAX_TIME_TO_BE_CONSIDERED_ONLINE)
                 continue;
+            */
 
 
 
@@ -636,7 +638,7 @@ public class mainHttp{
 				reply.put("mobileCount", mMobileCount);
 
       //DEMO:
-      addWhosHome(reply);
+      //addWhosHome(reply);
 
 		}
 		sendReplyAndClose(he, reply);
@@ -800,7 +802,7 @@ public class mainHttp{
     for(int i =0; i< services.length(); i++ ){
       JSONObject service = services.getJSONObject(i);
       JSONObject device = json.getJSONObject("data").getJSONObject("devices_info").getJSONObject(service.getString("device_id"));
-      System.out.println(device.toString());
+      /*
       boolean is_lab_device = device.has("mac") && device.getString("mac").startsWith("000000000000%");
       if(service.has("seconds_since_last_seen") ){
         Integer ssls = service.getInt("seconds_since_last_seen");
@@ -808,7 +810,7 @@ public class mainHttp{
             (ssls > MAX_TIME_TO_BE_CONSIDERED_ONLINE) ){
           continue;
         }
-      }
+      }*/
       new_services.put(service);
     }
     json.getJSONObject("data").put("services", new_services);

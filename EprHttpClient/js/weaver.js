@@ -3,13 +3,14 @@
 //*******************
 //Change the following line to the EprHttpServer's IP address and the port:
 var WEAVER_SERVER  = "http://127.0.0.1:8000/"
-var WEAVER_SERVER  = "http://192.168.13.227:8000/"
+//var WEAVER_SERVER = "http://produvia-lab.cloudapp.net:8105/"
 
 var dbg = false;
 
-var MINUTES_SINCE_LAST_SEEN_TO_BE_CONSIDERED_ONLINE = 1;
 var AUTH_TOKEN = null;
 var TOTAL_SERVICES_DISCOVERED = 0;
+var SECONDS_TO_STALE_SERVICE = 120;
+var MINUTES_SINCE_LAST_SEEN_TO_BE_CONSIDERED_ONLINE = 1;
 
 var currentLoginService = null;
 var currentResponseData = null;
@@ -434,6 +435,9 @@ function handleReceivedServices(data) {
     services = data.services;
     for (var i = 0; i < services.length; i++) {
         service = services[i];
+        //if the service hasn't been seen in a long time - let's not display it:
+        if(service.seconds_since_last_seen != null && service.seconds_since_last_seen > SECONDS_TO_STALE_SERVICE)
+          continue;
         service_type = service.service;
 
 
@@ -850,6 +854,8 @@ function appendLightStructure(service, device_type){
 
 function appendLightColorStructure(service, device_type){
   checked = "";
+  if(service.properties == null || service.properties.power ==null)
+    return;
   if(service.properties.power.on)
     checked = "checked";
   initial_color = {h:(service.properties.color.hue/360), s:service.properties.color.sat, v:service.properties.color.bri, a:1};
