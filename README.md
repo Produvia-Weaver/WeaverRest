@@ -19,7 +19,7 @@
 
 ### How To Use Weaver Rest SDK
 - Simply download this repository which includes the JAVA server and a simple HTTP client
-- [Join our beta program] to receive your Weaver-SDK API KEY
+- [Sign up] to receive your Weaver-SDK API KEY - also check out our [getting started video]
 - Build the WeaverServer using running ant from EprHttpServer folder
 - Also checkout the [Documentation]
 
@@ -47,7 +47,8 @@ License
 The Weaver Rest app is distributed under the MIT License
 
    [JSON API]: <http://weavingthings.com/weaver-sdk-reference/>
-   [Join our beta program]: <https://produvia-net.com/developers>
+   [Sign up]: <https://produvia-net.com/developers>
+   [getting started video]: <https://youtu.be/2O-vDnG4PZk>
    [Documentation]: <http://weavingthings.com/weaver-sdk-reference/>
    [Weaver SDK]: <http://weavingthings.com>
    [Tutorial]: <http://www.weavingthings.com/technical_docs/rest-server-raspberry-pi/>
